@@ -63,9 +63,9 @@ enableMultiDispatch = true
 
 > 运行容器
 ```sh
-docker run -d --name rocketmq -v /data/docker/rocketmq/store:/home/rocketmq/store \
-    -v /data/docker/rocketmq/logs:/home/rocketmq/logs -v /data/docker/rocketmq/conf:/home/rocketmq/conf \
-    -v /data/docker/rocketmq/conf/broker.conf:/home/rocketmq/rockermq-5.1.0/conf/broker.conf \
+docker run -d --name rocketmq -v D:/data/docker/rocketmq/store:/home/rocketmq/store \
+    -v D:/data/docker/rocketmq/logs:/home/rocketmq/logs -v D:/data/docker/rocketmq/conf:/home/rocketmq/conf \
+    -v D:/data/docker/rocketmq/conf/broker.conf:/home/rocketmq/rockermq-5.1.0/conf/broker.conf \
     -p 10911:10911 -p 10912:10912 -p 10909:10909 -p 9876:9876 -p 8181:8181 \
     massdock/rocketmq:5.1.0
 ```
@@ -79,19 +79,19 @@ docker run -d --name rocketmq -v /data/docker/rocketmq/store:/home/rocketmq/stor
 > 启动nameserver
 
 ```sh
-docker run -d --name mqnamesrv-0 -v /data/docker/rocketmq/store:/home/rocketmq/mqnamesrv-0/store \
-    -v /data/docker/rocketmq/mqnamesrv-0/logs:/home/rocketmq/logs -v /data/docker/rocketmq/mqnamesrv-0/conf:/home/rocketmq/conf \
+docker run -d --name mqnamesrv-0 -v D:/data/docker/rocketmq/mqnamesrv-0/store:/home/rocketmq/store \
+    -v D:/data/docker/rocketmq/mqnamesrv-0/logs:/home/rocketmq/logs -v D:/data/docker/rocketmq/mqnamesrv-0/conf:/home/rocketmq/conf \
     -p 9876:9876 \
     massdock/rocketmq:5.1.0 sh bin/mqnamesrv 
 ```
 
 
 > 启动mqbroker-a
-> 注意-c指定的broker配置修改宿主机的IP
+> 注意-c指定的broker配置修改成宿主机的IP，添加 brokerIP1 = 172.23.48.1 参数
 
 ```sh
-docker run -d --name mqbroker-a --link mqnamesrv-0:mqnamesrv -v /data/docker/rocketmq/mqbroker-a/store:/home/rocketmq/store \
-    -v /data/docker/rocketmq/mqbroker-a/logs:/home/rocketmq/logs -v /data/docker/rocketmq/mqbroker-a/conf:/home/rocketmq/conf \
+docker run -d --name mqbroker-a --link mqnamesrv-0:mqnamesrv -v D:/data/docker/rocketmq/mqbroker-a/store:/home/rocketmq/store \
+    -v D:/data/docker/rocketmq/mqbroker-a/logs:/home/rocketmq/logs -v D:/data/docker/rocketmq/mqbroker-a/conf:/home/rocketmq/conf \
     -p 10911:10911 -p 10912:10912 -p 10909:10909 \
     massdock/rocketmq:5.1.0 sh bin/mqbroker -n mqnamesrv:9876 -c conf/2m-noslave/broker-a.properties --enable-proxy
 ```
@@ -99,8 +99,8 @@ docker run -d --name mqbroker-a --link mqnamesrv-0:mqnamesrv -v /data/docker/roc
 > 启动mqbroker-b
 
 ```sh
-docker run -d --name mqbroker-b --link mqnamesrv-0:mqnamesrv -v /data/docker/rocketmq/mqbroker-b/store:/home/rocketmq/store \
-    -v /data/docker/rocketmq/mqbroker-b/logs:/home/rocketmq/logs -v /data/docker/rocketmq/mqbroker-b/conf:/home/rocketmq/conf \
+docker run -d --name mqbroker-b --link mqnamesrv-0:mqnamesrv -v D:/data/docker/rocketmq/mqbroker-b/store:/home/rocketmq/store \
+    -v D:/data/docker/rocketmq/mqbroker-b/logs:/home/rocketmq/logs -v D:/data/docker/rocketmq/mqbroker-b/conf:/home/rocketmq/conf \
     -p 11911:10911 -p 11912:10912 -p 11909:10909 \
     massdock/rocketmq:5.1.0 sh bin/mqbroker -n mqnamesrv:9876 -c conf/2m-noslave/broker-b.properties --enable-proxy
 ```
