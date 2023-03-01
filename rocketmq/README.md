@@ -72,3 +72,40 @@ docker run -d --name rocketmq -v /data/docker/rocketmq/store:/home/rocketmq/stor
 
 至此可以在宿主机本地打开`localhost:8181`浏览控制台了
 [控制台](http://localhost:8181)
+
+
+#### 启动集群
+
+> 启动nameserver
+
+```sh
+docker run -d --name mqnamesrv-0 -v /data/docker/rocketmq/store:/home/rocketmq/store \
+    -v /data/docker/rocketmq/logs:/home/rocketmq/logs -v /data/docker/rocketmq/conf:/home/rocketmq/conf \
+    -v /data/docker/rocketmq/conf/broker.conf:/home/rocketmq/rockermq-5.1.0/conf/broker.conf \
+    -p 9876:9876 \
+    massdock/rocketmq:5.1.0 sh bin/mqnamesrv 
+```
+
+
+> 启动mqbroker-a
+
+```sh
+docker run -d --name mqbroker-a --link mqnamesrv-0:mqnamesrv -v /data/docker/rocketmq/store:/home/rocketmq/store \
+    -v /data/docker/rocketmq/logs:/home/rocketmq/logs -v /data/docker/rocketmq/conf:/home/rocketmq/conf \
+    -v /data/docker/rocketmq/conf/broker.conf:/home/rocketmq/rockermq-5.1.0/conf/broker.conf \
+    -p 10911:10911 -p 10912:10912 -p 10909:10909 \
+    massdock/rocketmq:5.1.0 sh bin/mqbroker -n mqnamesrv:9876 -c conf/2m-noslave/broker-a.properties --enable-proxy
+```
+
+> 启动mqbroker-b
+
+```sh
+docker run -d --name mqbroker-b --link mqnamesrv-0:mqnamesrv -v /data/docker/rocketmq/store:/home/rocketmq/store \
+    -v /data/docker/rocketmq/logs:/home/rocketmq/logs -v /data/docker/rocketmq/conf:/home/rocketmq/conf \
+    -v /data/docker/rocketmq/conf/broker.conf:/home/rocketmq/rockermq-5.1.0/conf/broker.conf \
+    -p 11911:10911 -p 11912:10912 -p 11909:10909 \
+    massdock/rocketmq:5.1.0 sh bin/mqbroker -n mqnamesrv:9876 -c conf/2m-noslave/broker-a.properties --enable-proxy
+```
+
+
+
