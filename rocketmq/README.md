@@ -101,10 +101,19 @@ docker run -d --name mqbroker-a --link mqnamesrv-0:mqnamesrv -v D:/data/docker/r
 ```sh
 docker run -d --name mqbroker-b --link mqnamesrv-0:mqnamesrv -v D:/data/docker/rocketmq/mqbroker-b/store:/home/rocketmq/store \
     -v D:/data/docker/rocketmq/mqbroker-b/logs:/home/rocketmq/logs -v D:/data/docker/rocketmq/mqbroker-b/conf:/home/rocketmq/conf \
-    -p 11911:10911 -p 11912:10912 -p 11909:10909 \
+    -p 11911:11911 -p 11912:11912 -p 11909:11909 \
     massdock/rocketmq:5.1.0 sh bin/mqbroker -n mqnamesrv:9876 -c conf/2m-noslave/broker-b.properties --enable-proxy
 ```
-
+> 参数样例
+~~~sh
+#修改 conf/2m-noslave/broker-*.properties 配置文件
+listenPort=11911
+fastListenPort=11909
+haListenPort=11912
+brokerIP1=172.23.48.1
+enableLmq=true
+enableMultiDispatch=true
+~~~
 
 > 启动console控制台
 
