@@ -114,4 +114,5 @@ docker run -d --name console -p 8181:8181 \
 ```
 > PS: 控制台启动后进入控制台添加 mqnamesrv, 比如我的是 172.23.48.1:9876
 
-
+#### 更多参数参考官方
+[Apache Rocketmq](https://rocketmq.apache.org/zh/docs/bestPractice/01bestpractice)
