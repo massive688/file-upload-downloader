@@ -127,7 +127,7 @@ cd rocketmq-mqtt-*
 
 ~~~sh
 username=admin                     	#注意：这里的用户名会在客户端中使用
-secretKey=adminKey                	#注意：这里的用户密码会在客户端中使用
+secretKey=adminkey                	#注意：这里的用户密码会在客户端中使用
 # Rocketmq的nameserver地址端口
 NAMESRV_ADDR=192.168.0.9:9876
 eventNotifyRetryTopic=eventMqttNotifyRetryTopic
