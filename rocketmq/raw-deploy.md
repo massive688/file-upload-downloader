@@ -131,8 +131,8 @@ cd rocketmq-mqtt-*
 
 ~~~sh
 # 先启动meta
-sh meta.sh start
-sh mqtt.sh start
+sh bin/meta.sh start
+sh bin/mqtt.sh start
 ~~~
 
 > ### 接下来MQTT玩耍吧
