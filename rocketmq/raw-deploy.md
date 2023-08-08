@@ -1,3 +1,23 @@
+##### Centos Deploy Rocketmq MQTT
+
+~~~sh
+# Centos:7.9.2009
+yum update -y
+yum install -y java-1.8.0-openjdk-devel.x86_64 unzip wget telnet git
+
+cd ~
+
+# 安装maven
+curl -sSL -O https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz && \
+tar -zxvf apache-maven-3.8.8-bin.tar.gz && \
+mv ./apache-maven-3.8.8 /usr/local/maven && \
+rm apache-maven*.gz
+
+    
+~~~
+
+
+
 > **创建一个根目录**
 
 ~~~sh
@@ -10,10 +30,11 @@ cd rocketmq
 ~~~sh
 wget https://dist.apache.org/repos/dist/release/rocketmq/5.1.3/rocketmq-all-5.1.3-bin-release.zip
 unzip rocketmq-all-5.1.3-bin-release.zip -d ./
-mv rocketmq*/* . 
-sed -i 's/\r$//' bin/*.sh
-sed -i 's/\r$//' *.sh
-chown -R ${uid}:${gid} ${ROCKETMQ_HOME}
+mv rocketmq-all-*/* . 
+rm -rf rocketmq-all-*
+#sed -i 's/\r$//' bin/*.sh
+#sed -i 's/\r$//' *.sh
+#chown -R ${uid}:${gid} ${ROCKETMQ_HOME}
 ~~~
 
 > **修改Brock.conf配置文件**
@@ -37,7 +58,33 @@ nohup sh bin/mqnamesrv >~/logs/rocketmqlogs/namesrv.log 2>&1 &
 nohup sh bin/mqbroker -n localhost:9876 --enable-proxy &
 ~~~
 
+> **在rocketmq中创建mqtt对应的两个topic 创建好备用**
+>
+> ```sh
+> eventNotifyRetryTopic=eventMqttNotifyRetryTopic
+> clientRetryTopic=clientMqttRetryTopic
+> ```
 
+```sh
+# 创建mqtt topic 
+sh bin/mqadmin updatetopic -c DefaultCluster -t eventMqttNotifyRetryTopic -n localhost:9876
+sh bin/mqadmin updatetopic -c DefaultCluster -t clientMqttRetryTopic -n localhost:9876
+# 更新rocketKv配置 
+sh bin/mqadmin updateKvConfig -s LMQ -k LMQ_CONNECT_NODES -v localhost -n localhost:9876
+sh bin/mqadmin updateKvConfig -s LMQ -k ALL_FIRST_TOPICS -v eventMqttNotifyRetryTopic,clientMqttRetryTopic -n localhost:9876
+sh bin/mqadmin updateKvConfig  -s LMQ -k eventMqttNotifyRetryTopic -v eventMqttNotifyRetryTopic/+  -n localhost:9876
+sh bin/mqadmin updateKvConfig  -s LMQ -k clientMqttRetryTopic -v clientMqttRetryTopic/+  -n localhost:9876
+```
+
+
+
+> ### 配置MQTT开始
+
+
+~~~sh
+mkdir ~/rocket-mqtt
+cd ~/rocket-mqtt
+~~~
 
 > **克隆MQTT源码**
 
@@ -74,27 +121,12 @@ membersAddress=172.23.0.1:8561
 
 ~~~sh
 mvn -Prelease-all -DskipTests clean install -U 
-cd distribution/target/ 
-cd bin
+mv distribution/target/rocketmq-mqtt-*.zip ../ 
+cd ..
+unzip rocketmq-mqtt-*.zip
+cd rocketmq-mqtt-*
 ~~~
 
-> **在rocketmq中创建mqtt对应的两个topic**
->
-> ```sh
-> eventNotifyRetryTopic=eventMqttNotifyRetryTopic
-> clientRetryTopic=clientMqttRetryTopic
-> ```
-
-```sh
-# 创建mqtt topic 
-sh bin/mqadmin updatetopic -c DefaultCluster -t eventMqttNotifyRetryTopic -n localhost:9876
-sh bin/mqadmin updatetopic -c DefaultCluster -t clientMqttRetryTopic -n localhost:9876
-# 更新rocketKv配置 
-sh bin/mqadmin updateKvConfig -s LMQ -k LMQ_CONNECT_NODES -v localhost -n localhost:9876
-sh bin/mqadmin updateKvConfig -s LMQ -k ALL_FIRST_TOPICS -v eventMqttNotifyRetryTopic,clientMqttRetryTopic -n localhost:9876
-sh bin/mqadmin updateKvConfig  -s LMQ -k eventMqttNotifyRetryTopic -v eventMqttNotifyRetryTopic/+  -n localhost:9876
-sh bin/mqadmin updateKvConfig  -s LMQ -k clientMqttRetryTopic -v clientMqttRetryTopic/+  -n localhost:9876
-```
 > **启动mqtt**
 
 ~~~sh
@@ -104,4 +136,3 @@ sh mqtt.sh start
 ~~~
 
 > ### 接下来MQTT玩耍吧
-
