@@ -26,29 +26,31 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MqttProducer {
-    public static void main(String[] args) throws InterruptedException, MqttException, NoSuchAlgorithmException, InvalidKeyException {
+public class MqttWillRetainConsumer {
+    public static void main(String[] args) throws MqttException, NoSuchAlgorithmException, InvalidKeyException {
+        String brokerUrl = "tcp://" + System.getenv("host") + ":1883";
+        String firstTopic = System.getenv("topic");
         MemoryPersistence memoryPersistence = new MemoryPersistence();
-        System.setProperty("host", "192.168.0.9");
-        System.setProperty("topic", "markAditFirstMessageTopic");
-        System.setProperty("username", "admin");
-        System.setProperty("password", "adminkey");
-        String brokerUrl = "tcp://" + System.getProperty("host") + ":1883";
-        String firstTopic = System.getProperty("topic");
-        String sendClientId = "send01";
-        MqttConnectOptions mqttConnectOptions = buildMqttConnectOptions(sendClientId);
-        MqttClient mqttClient = new MqttClient(brokerUrl, sendClientId, memoryPersistence);
+        String recvClientId = "recv02";
+        MqttConnectOptions mqttConnectOptions = buildMqttConnectOptions(recvClientId);
+        MqttClient mqttClient = new MqttClient(brokerUrl, recvClientId, memoryPersistence);
         mqttClient.setTimeToWait(5000L);
         mqttClient.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean reconnect, String serverURI) {
-                System.out.println(sendClientId + " connect success to " + serverURI);
+                System.out.println(recvClientId + " connect success to " + serverURI);
+                try {
+                    final String topicFilter[] = {firstTopic + "/retainTopicR",firstTopic + "/retainTopic/+", firstTopic + "/willTopic1",};
+                    final int[] qos = {1, 1, 1};
+                    mqttClient.subscribe(topicFilter, qos);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -57,43 +59,25 @@ public class MqttProducer {
             }
 
             @Override
-            public void messageArrived(String topic, MqttMessage mqttMessage) {
+            public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
+                try {
+                    String payload = new String(mqttMessage.getPayload());
+                    System.out.println(now() + "receive:" + topic + "," + payload);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
             }
         });
+
         try {
             mqttClient.connect(mqttConnectOptions);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        long interval = 1000;
-        for (int i = 0; i < 1000; i++) {
-            String msg = "r1_" + System.currentTimeMillis() + "_" + i;
-            MqttMessage message = new MqttMessage(msg.getBytes(StandardCharsets.UTF_8));
-            message.setQos(1);
-            String mqttSendTopic = firstTopic + "/r1";
-            mqttClient.publish(mqttSendTopic, message);
-            System.out.println(now() + "send: " + mqttSendTopic + ", " + msg);
-            Thread.sleep(interval);
-
-            mqttSendTopic = firstTopic + "/r/wc";
-            msg = "wc_" + System.currentTimeMillis() + "_" + i;
-            MqttMessage messageWild = new MqttMessage(msg.getBytes(StandardCharsets.UTF_8));
-            messageWild.setQos(1);
-            mqttClient.publish(mqttSendTopic, messageWild);
-            System.out.println(now() + "send: " + mqttSendTopic + ", " + msg);
-            Thread.sleep(interval);
-
-            mqttSendTopic = firstTopic + "/r2";
-            msg = "msgQ2_" + System.currentTimeMillis() + "_" + i;
-            message = new MqttMessage(msg.getBytes(StandardCharsets.UTF_8));
-            message.setQos(2);
-            mqttClient.publish(mqttSendTopic, message);
-            System.out.println(now() + "send: " + mqttSendTopic + ", " + msg);
-            Thread.sleep(interval);
+            System.out.println("connect fail");
         }
     }
 
@@ -103,8 +87,8 @@ public class MqttProducer {
         connOpts.setKeepAliveInterval(60);
         connOpts.setAutomaticReconnect(true);
         connOpts.setMaxInflight(10000);
-        connOpts.setUserName(System.getProperty("username"));
-        connOpts.setPassword(HmacSHA1Util.macSignature(clientId, System.getProperty("password")).toCharArray());
+        connOpts.setUserName(System.getenv("username"));
+        connOpts.setPassword(HmacSHA1Util.macSignature(clientId, System.getenv("password")).toCharArray());
         return connOpts;
     }
 
@@ -112,4 +96,5 @@ public class MqttProducer {
         SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         return sf.format(new Date()) + "\t";
     }
+
 }
